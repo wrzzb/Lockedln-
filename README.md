@@ -1,3 +1,28 @@
-# Lockedln
-## About Project
-LockedIn is a virtual workspace where users can use the website for activities such as studying or completing assignments. Several features are available to assist users in their activities, such as customizing songs, backgrounds, and timers. Users can also upload files of study materials and access them within the website. Uploaded files are stored in a database based on each account's login session, ensuring progress is not lost.
+# Locked In
+Locked In is a productivity web app aiming to help users stay focused while studying and/or working. By connecting the user’s desktop account to their phone, the system automatically locks the phone screen whenever a focus session timer begins, reducing distractions and encouraging deep focus. Locked In offers an all-in-one personalized focus room that allows users to directly attach notes/presentation slide/other materials, customize background wallpaper and music/ambience, and create notes which makes it possible for users to access everything they need without leaving the platform.
+
+## Features
+- Lock Screen
+- All-In-One Focus Room
+   - File Attachment
+   - Customize Background Wallpaper
+   - Customize Background Music / Ambience
+   - Create Notes
+- Focus Session Scheduling
+
+### Installing
+
+* How/where to download your program
+* Any modifications needed to be made to files/folders
+
+### Executing program
+
+* How to run the program
+* Step-by-step bullets
+
+## Authors
+- Jovan Aurelius Reyhanta
+- Elvan Williams
+- Alysa Gozali
+- Khansa Areta Gianika
+- Shandy Lawrencia Santoso
