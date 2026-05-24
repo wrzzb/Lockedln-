@@ -14,91 +14,46 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const provider = new GoogleAuthProvider();
-// Tambahkan ini di bagian bawah script.js atau di dalam fungsi inisialisasi
-const setBtn = document.getElementById('set-custom-btn');
-if (setBtn) {
-    setBtn.onclick = () => {
-        const minInput = document.getElementById('custom-minutes');
-        const mins = parseInt(minInput.value);
-        
-        if (mins > 0) {
-            // Hentikan timer yang sedang berjalan
-            clearInterval(timerInterval);
-            isRunning = false;
-            
-            // Ubah waktu (menit ke detik)
-            timeLeft = mins * 60;
-            
-            // Perbarui tampilan angka di layar
-            updateDisplay(); 
-            
-            console.log("Timer diganti ke:", mins, "menit");
-        } else {
-            alert("Silakan masukkan angka menit!");
-        }
-    };
-}
 
-// --- STATE & TIMER (Sesuai Layout Header Baru) ---
-let timerInterval;
-let timeLeft = 25 * 60;
-let isRunning = false;
-
-window.setTimer = (minutes, mode) => {
-    clearInterval(timerInterval);
-    isRunning = false;
-    timeLeft = minutes * 60;
-    updateDisplay();
-    
-    // Sesuaikan selector untuk tombol mode di header
-    document.querySelectorAll('.pomodoro-modes-mini button').forEach(b => b.classList.remove('active'));
-    document.getElementById(`mode-${mode}`).classList.add('active');
-};
+// --- TIMER LOGIC ---
+let timerInterval, timeLeft = 25 * 60, isRunning = false;
 
 function updateDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    document.getElementById('time-display').textContent = display;
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    document.getElementById('time-display').textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
 }
 
+document.getElementById('set-custom-btn').onclick = () => {
+    const mins = parseInt(document.getElementById('custom-minutes').value);
+    if (mins > 0) { clearInterval(timerInterval); isRunning = false; timeLeft = mins * 60; updateDisplay(); }
+};
+
 document.getElementById('start-btn').onclick = () => {
-    if (isRunning) return;
-    isRunning = true;
+    if (isRunning) return; isRunning = true;
     timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            updateDisplay();
-        } else {
-            clearInterval(timerInterval);
-            isRunning = false;
-            alert("Sesi selesai!");
-        }
+        if (timeLeft > 0) { timeLeft--; updateDisplay(); }
+        else { clearInterval(timerInterval); isRunning = false; document.getElementById('alarm-sound').play(); alert("Sesi Selesai!"); }
     }, 1000);
 };
 
-document.getElementById('pause-btn').onclick = () => {
-    clearInterval(timerInterval);
-    isRunning = false;
-};
-
+document.getElementById('pause-btn').onclick = () => { clearInterval(timerInterval); isRunning = false; };
 document.getElementById('reset-btn').onclick = () => {
-    clearInterval(timerInterval);
-    isRunning = false;
-    timeLeft = 25 * 60;
-    updateDisplay();
+    clearInterval(timerInterval); isRunning = false; timeLeft = 25 * 60; updateDisplay();
+    const alarm = document.getElementById('alarm-sound'); alarm.pause(); alarm.currentTime = 0;
 };
 
-// --- AUTH & SYNC ---
+// --- AUTH & USER STATE ---
 onAuthStateChanged(auth, (user) => {
+    const loginBtn = document.getElementById('login-btn');
+    const userProfile = document.getElementById('user-profile');
     if (user) {
-        document.getElementById('login-btn').style.display = 'none';
-        document.getElementById('user-profile').style.display = 'flex';
-        document.getElementById('user-name').textContent = user.displayName;
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (userProfile) userProfile.style.display = 'block';
+        document.getElementById('user-name').textContent = user?.displayName || "User";
         loadUserMaterials(user.uid);
     } else {
-        document.getElementById('login-btn').style.display = 'block';
-        document.getElementById('user-profile').style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (userProfile) userProfile.style.display = 'none';
         document.getElementById('bookshelf').innerHTML = "";
     }
 });
@@ -106,169 +61,76 @@ onAuthStateChanged(auth, (user) => {
 document.getElementById('login-btn').onclick = () => signInWithPopup(auth, provider);
 document.getElementById('logout-btn').onclick = () => signOut(auth);
 
-// --- RAK BUKU & UPLOAD (Sesuai Tombol Compact) ---
-const fileUpload = document.getElementById('file-upload');
-
-fileUpload.onchange = async (e) => {
-    const user = auth.currentUser;
-    if (!user) return alert("Silakan login dulu!");
-
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Selector baru untuk area upload materi yang compact
-    const uploadLabel = document.querySelector('.upload-label-compact');
-    const originalContent = uploadLabel.innerHTML;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', user.uid);
-
-    try {
-        // Visual Feedback
-        uploadLabel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mengunggah...`;
-        uploadLabel.style.pointerEvents = "none";
-
-        const response = await fetch('http://localhost:3000/api/upload', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (response.ok) {
-            loadUserMaterials(user.uid); 
-        } else {
-            alert("Gagal upload ke server.");
-        }
-    } catch (err) {
-        console.error("Detail Error:", error); // Ini akan menampilkan error asli
-        alert("Server backend tidak merespons.");
-    } finally {
-        uploadLabel.innerHTML = originalContent;
-        uploadLabel.style.pointerEvents = "auto";
-        e.target.value = ""; 
-    }
-};
-
+// --- MATERIALS LOGIC ---
 async function loadUserMaterials(uid) {
     try {
-        const response = await fetch(`http://localhost:3000/api/books/${uid}`);
-        const books = await response.json();
-        
-        const bookshelf = document.getElementById('bookshelf');
-        bookshelf.innerHTML = "";
+        const res = await fetch(`http://localhost:3000/api/books/${uid}`);
+        const books = await res.json();
+        const shelf = document.getElementById('bookshelf');
+        shelf.innerHTML = "";
         
         books.forEach(data => {
-            const bookWrapper = document.createElement('div');
-            bookWrapper.className = 'book-wrapper';
-
+            const wrap = document.createElement('div');
+            wrap.className = 'book-wrapper';
             const book = document.createElement('div');
             book.className = 'book-item';
-            // Berikan warna acak agar rak terlihat hidup
             book.style.backgroundColor = `hsl(${Math.random() * 360}, 60%, 35%)`;
-            book.innerHTML = `<div class="book-title">${data.title.substring(0,12)}...</div>`;
+            book.innerHTML = data.title.substring(0,10) + "...";
             
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-book-btn';
-            deleteBtn.innerHTML = '&times;';
-            deleteBtn.onclick = async (e) => {
-                e.stopPropagation();
-                if (confirm(`Hapus "${data.title}"?`)) {
-                    await deleteBook(data._id, uid);
-                }
-            };
-
             book.onclick = () => {
-                const modal = document.getElementById('book-modal');
-                const viewer = document.getElementById('modal-viewer');
-                viewer.src = data.url;
-                modal.style.display = "block";
+                document.getElementById('viewer-placeholder').style.display = "none";
+                const v = document.getElementById('modal-viewer');
+                v.style.display = "block"; v.src = data.url;
             };
 
-            bookWrapper.appendChild(book);
-            bookWrapper.appendChild(deleteBtn);
-            bookshelf.appendChild(bookWrapper);
+            const del = document.createElement('button');
+            del.className = 'delete-book-btn'; del.innerHTML = "×";
+            del.onclick = (e) => { e.stopPropagation(); if(confirm("Hapus materi?")) deleteBook(data._id, uid); };
+
+            wrap.append(book, del); shelf.append(wrap);
         });
-    } catch (err) {
-        console.error("Gagal memuat buku:", err);
-    }
+    } catch (e) { console.error("Gagal memuat:", e); }
 }
 
-async function deleteBook(bookId, uid) {
+async function deleteBook(id, uid) {
+    const res = await fetch(`http://localhost:3000/api/books/${id}`, { method: 'DELETE' });
+    if (res.ok) loadUserMaterials(uid);
+}
+
+// --- UPLOAD MATERI ---
+document.getElementById('file-upload').onchange = async (e) => {
+    const user = auth.currentUser; if (!user) return alert("Login dulu!");
+    const file = e.target.files[0]; if (!file) return;
+
+    const label = document.querySelector('.btn-upload-header');
+    const original = label.innerHTML;
+    label.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading...`;
+
+    const fd = new FormData(); fd.append('file', file); fd.append('userId', user.uid);
+
     try {
-        const response = await fetch(`http://localhost:3000/api/books/${bookId}`, {
-            method: 'DELETE'
-        });
-        if (response.ok) loadUserMaterials(uid);
-    } catch (err) {
-        alert("Gagal menghapus file.");
-    }
-}
-
-// Modal Close
-document.querySelector('.close-modal').onclick = () => {
-    document.getElementById('book-modal').style.display = "none";
-    document.getElementById('modal-viewer').src = ""; // Stop PDF/Video saat ditutup
+        const res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: fd });
+        if (res.ok) loadUserMaterials(user.uid);
+        else alert("Gagal mengunggah.");
+    } catch (err) { alert("Server tidak merespons."); }
+    finally { label.innerHTML = original; e.target.value = ""; }
 };
 
-// --- ENVIRONMENT & MUSIK LOKAL ---
-// Ganti Latar (Lokal)
-document.getElementById('bg-upload').onchange = (e) => {
-    if (e.target.files[0]) {
-        const url = URL.createObjectURL(e.target.files[0]);
-        document.body.style.backgroundImage = `url('${url}')`;
-    }
-};
-
-// Musik Lokal (Sesuai Selector Compact)
-const audio = document.getElementById('bg-audio');
-document.getElementById('music-upload').onchange = (e) => {
-    if (e.target.files[0]) {
-        audio.src = URL.createObjectURL(e.target.files[0]);
-        audio.play();
-    }
-};
-
-document.getElementById('stop-music-btn').onclick = () => {
-    audio.pause();
-    audio.currentTime = 0;
-};
-
-
-// Tambahkan fungsi ini di bagian atas atau dekat logika timer
-window.setCustomTimer = () => {
-    const minInput = document.getElementById('custom-minutes');
-    const mins = parseInt(minInput.value);
-    
-    if (mins > 0) {
-        clearInterval(timerInterval);
-        isRunning = false;
-        timeLeft = mins * 60;
-        updateDisplay();
-        
-        // Matikan semua status active pada tombol mode
-        document.querySelectorAll('.pomodoro-modes-mini button').forEach(b => b.classList.remove('active'));
-    } else {
-        alert("Masukkan jumlah menit yang valid!");
-    }
-};
-
-// Update bagian setInterval di dalam document.getElementById('start-btn').onclick
-document.getElementById('start-btn').onclick = () => {
-    if (isRunning) return;
-    isRunning = true;
-    timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            updateDisplay();
-        } else {
-            clearInterval(timerInterval);
-            isRunning = false;
-            
-            // FITUR SUARA: Putar alarm saat waktu habis
-            const alarm = document.getElementById('alarm-sound');
-            alarm.play(); 
-            
-            alert("Sesi selesai!");
+// --- SPOTIFY PLAYER ---
+document.getElementById('update-playlist-btn').onclick = () => {
+    let url = document.getElementById('playlist-url').value.trim();
+    if (url) {
+        if (!url.startsWith('http')) url = 'https://' + url;
+        if (url.includes('spotify.com') && !url.includes('/embed/')) {
+            url = url.replace('spotify.com/', 'spotify.com/embed/');
         }
-    }, 1000);
+        document.getElementById('spotify-iframe').src = url;
+        localStorage.setItem('savedPlaylist', url);
+    }
+};
+
+window.onload = () => {
+    const saved = localStorage.getItem('savedPlaylist');
+    if (saved) document.getElementById('spotify-iframe').src = saved;
+    updateDisplay();
 };

@@ -1,245 +1,55 @@
-/* --- DASAR & TYPOGRAPHY --- */
-* { 
-    box-sizing: border-box; 
-    font-family: 'Inter', sans-serif; 
+:root {
+    --bg-dark: #1e252b;
+    --sidebar-bg: #151a1e;
+    --panel-bg: #f8f9fa;
+    --accent: #00adb5;
 }
 
 body {
-    margin: 0; 
-    padding: 0;
-    background: #121212 no-repeat center center fixed;
-    background-size: cover;
-    color: #fff;
-    transition: background 0.5s ease;
+    margin: 0; background-color: var(--bg-dark);
+    color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
 }
 
-/* --- LAYOUT UTAMA --- */
-.workspace-container {
-    background: rgba(0, 0, 0, 0.6);
-    min-height: 100vh;
-    padding: 20px;
-}
+.app-container { display: flex; height: 100vh; }
 
-.main-content {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start; /* Agar panel musik dan rak buku sejajar atas */
-    flex-wrap: nowrap; /* Mencegah turun ke bawah di layar lebar */
-}
+/* SIDEBAR */
+.sidebar { width: 220px; background: var(--sidebar-bg); padding: 30px 20px; display: flex; flex-direction: column; }
+.avatar-circle { width: 50px; height: 50px; background: var(--accent); border-radius: 50%; margin: 0 auto 15px; }
+.side-nav a, .side-link { display: flex; align-items: center; gap: 12px; color: #aebbc1; text-decoration: none; padding: 12px 15px; font-size: 0.9rem; border-radius: 10px; cursor: pointer; margin-bottom: 5px; }
+.side-nav a.active, .side-nav a:hover { color: var(--accent); background: rgba(0, 173, 181, 0.1); }
 
-/* --- HEADER PANEL (Kini dengan Timer Terintegrasi) --- */
-.header-panel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 25px;
-    margin-bottom: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border-radius: 15px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
+/* MAIN STUDY AREA */
+.study-center { flex: 1; padding: 30px; display: flex; flex-direction: column; }
+.study-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.header-actions { display: flex; gap: 12px; }
 
-.header-section-left {
-    display: flex;
-    flex-direction: column; 
-    align-items: flex-start;
-    gap: 5px;
-}
+.btn-upload-header { background: rgba(0, 173, 181, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
+.btn-upload-header:hover { background: var(--accent); color: white; }
+.btn-session { background: var(--accent); border: none; color: white; padding: 10px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; }
 
-.header-panel h1 {
-    font-size: 1.3rem;
-    margin: 0;
-    letter-spacing: 0.5px;
-}
+.main-viewer-panel { flex: 1; background: var(--panel-bg); border-radius: 30px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+#modal-viewer { width: 100%; height: 100%; border: none; background: white; }
+.upload-placeholder { color: #888; text-align: center; }
 
-/* --- POMODORO TIMER (Mini Version di Header) --- */
-.header-timer {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: rgba(0,0,0,0.3);
-    padding: 8px 20px;
-    border-radius: 50px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
+/* RIGHT PANEL */
+.right-panel { width: 360px; padding: 25px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+.glass-panel { background: var(--panel-bg); border-radius: 28px; padding: 22px; color: #333; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+.panel-label { font-size: 0.7rem; font-weight: 800; color: #999; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
 
-.timer-display-mini {
-    font-size: 2rem;
-    font-weight: 800;
-    font-family: 'Courier New', Courier, monospace;
-    min-width: 100px;
-    text-align: center;
-}
+/* TIMER */
+.timer-row { display: flex; justify-content: space-between; align-items: center; }
+.timer-row h1 { font-size: 2.8rem; margin: 0; font-weight: 700; color: #222; }
+.timer-tools { display: flex; align-items: center; gap: 12px; }
+.timer-tools i { font-size: 1.5rem; color: var(--accent); cursor: pointer; transition: 0.2s; }
+#custom-minutes { width: 50px; height: 32px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-weight: 600; }
 
-.timer-controls-mini, .pomodoro-modes-mini {
-    display: flex;
-    gap: 8px;
-}
-
-/* --- PANEL UMUM --- */
-.panel {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(15px);
-    border-radius: 15px;
-    padding: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.music-panel { flex: 1; min-width: 320px; } /* Panel Musik lebih kecil */
-.bookshelf-panel { flex: 2.5; min-width: 450px; } /* Rak Buku lebih luas */
-
-/* --- TOMBOL & WARNA (Perbaikan Putih Polos) --- */
-button { 
-    border: none; 
-    cursor: pointer; 
-    color: white !important; 
-    transition: all 0.3s ease; 
-    padding: 8px 16px; 
-    border-radius: 8px; 
-    font-weight: bold; 
-}
-
-button:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-}
-
-/* Paksa warna agar muncul sesuai fungsi */
-.btn-primary, #login-btn { background: #3498db !important; }
-.btn-danger, #logout-btn, #stop-music-btn { background: #e74c3c !important; }
-.btn-success, #start-btn { background: #2ecc71 !important; }
-.btn-warning, #pause-btn { background: #f39c12 !important; }
-.btn-secondary, #reset-btn { background: #95a5a6 !important; }
-
-.btn-xs {
-    padding: 2px 8px;
-    font-size: 0.7rem;
-    border-radius: 4px;
-}
-
-/* Mode Pomodoro Active */
-.pomodoro-modes-mini button { background: rgba(255,255,255,0.1) !important; font-size: 0.75rem; }
-.pomodoro-modes-mini button.active { background: #3498db !important; }
-
-/* --- ENVIRONMENT / MUSIK SECTION --- */
-.spotify-area { margin-bottom: 15px; }
-
-.music-upload-area {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.upload-label-sm {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: rgba(255,255,255,0.05);
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px dashed rgba(255,255,255,0.3);
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: 0.3s;
-}
-
-.upload-label-sm:hover { background: rgba(255,255,255,0.1); border-color: #3498db; }
-
-/* --- RAK BUKU & UPLOAD MATERI --- */
-.upload-label-compact {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: rgba(52, 152, 219, 0.1);
-    border: 2px dashed #3498db;
-    border-radius: 12px;
-    padding: 20px;
-    cursor: pointer;
-    margin-bottom: 20px;
-    transition: 0.3s;
-}
-
-.upload-label-compact:hover { background: rgba(52, 152, 219, 0.2); transform: scale(1.01); }
-
-.bookshelf-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 20px;
-    padding: 20px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 10px;
-    border-bottom: 8px solid #5d2e0a;
-    max-height: 60vh; /* Agar tidak terlalu panjang ke bawah */
-    overflow-y: auto;
-}
-
-/* --- BUKU ITEM --- */
+/* BOOKSHELF */
+.bookshelf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: 220px; overflow-y: auto; padding-right: 5px; }
 .book-wrapper { position: relative; }
-.book-item {
-    width: 90px; height: 130px;
-    border-left: 10px solid rgba(0,0,0,0.2);
-    border-radius: 4px 8px 8px 4px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: 0.3s;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.4);
-}
-.book-item:hover { transform: translateY(-10px); }
-.book-title { font-size: 0.65rem; text-align: center; padding: 5px; overflow: hidden; }
+.book-item { width: 100%; height: 90px; border-radius: 12px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; text-align: center; padding: 8px; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
+.book-item:hover { transform: translateY(-5px); }
+.delete-book-btn { position: absolute; top: -5px; right: -5px; background: #ff4d4d; border: none; border-radius: 50%; color: white; cursor: pointer; width: 22px; height: 22px; font-size: 14px; font-weight: bold; }
 
-.delete-book-btn {
-    position: absolute; top: -5px; right: -5px;
-    background: #ff4d4d !important; width: 22px; height: 22px;
-    border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center;
-}
-
-/* --- MODAL VIEWER (Membuka Materi di Website) --- */
-.modal {
-    display: none; position: fixed; z-index: 10000;
-    left: 0; top: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px);
-}
-
-.modal-content {
-    position: relative; background: #fff;
-    margin: 2vh auto; width: 85%; height: 92vh;
-    border-radius: 12px; overflow: hidden;
-}
-
-#modal-viewer { width: 100%; height: 100%; border: none; }
-
-.close-modal {
-    position: absolute; right: 25px; top: 15px;
-    font-size: 35px; color: #fff; cursor: pointer; z-index: 10001;
-    text-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
-.custom-timer-input {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    margin: 5px 0;
-}
-
-.custom-timer-input input {
-    width: 50px;
-    background: #222;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 4px;
-    padding: 2px 5px;
-    text-align: center;
-    font-size: 0.8rem;
-}
-
-/* Animasi Spin Loading */
-.loading i { animation: spin 1s infinite linear; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-/* Responsif untuk layar kecil */
-@media (max-width: 900px) {
-    .main-content { flex-direction: column; }
-    .header-panel { flex-direction: column; gap: 15px; }
-}
+/* UTILS */
+.btn-primary-xs { background: var(--accent); color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
+.btn-danger-xs { background: #ff4d4d; color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
