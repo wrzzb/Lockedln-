@@ -53,3 +53,195 @@ body {
 /* UTILS */
 .btn-primary-xs { background: var(--accent); color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
 .btn-danger-xs { background: #ff4d4d; color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
+
+/* Container Utama Halaman Notes */
+#notes-page {
+    display: none; 
+    width: 100%; 
+    height: 100%; 
+    padding: 25px; 
+    box-sizing: border-box;
+}
+
+/* Wrapper Flexbox Kiri & Kanan */
+.notes-wrapper {
+    display: flex;
+    gap: 25px;
+    height: calc(100vh - 140px); /* Membatasi tinggi agar tidak tembus layout bawah screen */
+    align-items: flex-start;
+}
+
+/* 1. KOTAK FORM INPUT (KIRI) */
+.notes-input-box {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    max-height: 100%; /* Menjaga agar form tidak melorot ke bawah */
+    box-sizing: border-box;
+}
+
+/* Input Judul */
+.notes-input-box input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff !important; /* Teks ketikan menjadi putih bersih */
+    font-size: 0.95rem;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Textarea Isi Catatan */
+.notes-input-box textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff !important; /* Teks isi menjadi putih bersih */
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    height: 220px; /* Membatasi tinggi input ketikan agar proporsional */
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+/* Efek Focus saat Input Diklik */
+.notes-input-box input:focus, 
+.notes-input-box textarea:focus {
+    border-color: var(--accent);
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 10px rgba(0, 173, 181, 0.2);
+}
+
+/* Warna Placeholder text */
+.notes-input-box input::placeholder,
+.notes-input-box textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* TOMBOL SIMPAN CATATAN */
+#btn-save-note {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 173, 181, 0.3);
+}
+
+#btn-save-note:hover {
+    background: #00c2cb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 173, 181, 0.4);
+}
+
+#btn-save-note:active {
+    transform: translateY(1px);
+}
+
+
+/* 2. WADAH DAFTAR CATATAN (KANAN) */
+#notes-list-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 100%; /* Sesuai dengan tinggi wrapper agar otomatis nge-scroll di dalam */
+    padding-right: 8px;
+    box-sizing: border-box;
+}
+
+/* Item Card Catatan */
+.note-card-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 4px solid var(--accent);
+    padding: 18px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+}
+
+.note-card-item:hover {
+    transform: translateX(3px);
+    background: rgba(255, 255, 255, 0.07);
+    border-left-width: 6px;
+}
+
+/* Judul di dalam Card */
+.note-card-item h4 {
+    margin: 0 0 6px 0;
+    color: var(--accent) !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Isi Teks di dalam Card */
+.note-card-item p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: #e2e8f0 !important; /* Teks isi card abu-abu terang terang elegan */
+    white-space: pre-wrap;
+}
+
+/* Desain Scrollbar untuk List Catatan */
+#notes-list-container::-webkit-scrollbar {
+    width: 5px;
+}
+#notes-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+#notes-list-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+#notes-list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+/* ==SWAP LAYOUT POSITIONS== */
+
+/* Memastikan susunan utama fleksibel */
+.app-container {
+    display: flex;
+}
+
+/* 1. Sidebar tetap di paling kiri (Urutan 1) */
+.sidebar {
+    order: 1;
+}
+
+/* 2. Mengubah Halaman Utama & Notes agar berada di Tengah (Urutan 2) */
+.study-center, 
+#notes-page {
+    order: 2;
+    flex: 1; 
+}
+
+/* 3. Mengubah Panel Kanan (Timer, Rak, Music) agar pindah ke paling Kanan (Urutan 3) */
+.right-panel {
+    order: 3;
+    width: 360px; 
+}

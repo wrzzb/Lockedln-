@@ -19,9 +19,9 @@
                 <button id="login-btn" class="btn-primary-xs">Login</button>
             </div>
             <nav class="side-nav">
-                <a href="#" class="active"><i class="fas fa-book-open"></i> Study Room</a>
+                <a href="#" class="active" id="menu-study"><i class="fas fa-book-open"></i> Study Room</a>
                 <a href="#"><i class="fas fa-calendar-alt"></i> Schedule</a>
-                <a href="#"><i class="fas fa-sticky-note"></i> Notes</a>
+                <a href="#" id="menu-notes"><i class="fas fa-sticky-note"></i> Notes</a>
                 <label for="bg-upload" class="side-link"><i class="fas fa-image"></i> Ganti Latar</label>
                 <input type="file" id="bg-upload" hidden>
             </nav>
@@ -84,6 +84,29 @@
                 <audio id="bg-audio"></audio>
             </section>
         </aside>
+
+        <div id="notes-page" style="display: none; width: 100%; height: 100%; color: #333; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; backdrop-filter: blur(10px);">
+    <h3 style="color: #fff; margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; font-weight: 600;">My Personal Notes</h3>
+    
+    <div class="notes-wrapper" style="display: flex; gap: 20px; height: calc(100% - 50px);">
+        <div class="notes-input-box" style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+            <input type="text" id="note-title" placeholder="Judul Catatan..." 
+                   style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; outline: none;" />
+            
+            <textarea id="note-content" placeholder="Tulis sesuatu di sini..." rows="10" 
+                      style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; resize: none; outline: none; flex-grow: 1;"></textarea>
+            
+            <button id="btn-save-note" 
+                    style="width: 100%; padding: 12px; background-color: #00b4d8; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.2s;">
+                Simpan Catatan
+            </button>
+        </div>
+
+        <div id="notes-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; max-height: 400px; padding-right: 5px;">
+            </div>
+    </div>
+</div>
+
     </div>
     <script type="module" src="script.js"></script>
 </body>

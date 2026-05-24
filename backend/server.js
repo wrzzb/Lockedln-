@@ -24,6 +24,15 @@ const bookSchema = new mongoose.Schema({
 
 const Book = mongoose.model('Book', bookSchema);
 
+// Schema Data untuk Notes
+const noteSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Note = mongoose.model('Note', noteSchema);
+
 // 3. Konfigurasi Cloudinary
 cloudinary.config({ 
     cloud_name: 'dcky4itki', 
@@ -119,6 +128,30 @@ app.delete('/api/books/:id', async (req, res) => {
         res.json({ message: "Materi berhasil dihapus" });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// --- ENDPOINT UNTUK NOTES ---
+
+// 1. POST: Menyimpan catatan baru ke MongoDB
+app.post('/api/notes', async (req, res) => {
+    try {
+        const { title, content } = req.body;
+        const newNote = new Note({ title, content });
+        await newNote.save();
+        return res.status(201).json(newNote);
+    } catch (error) {
+        return res.status(500).json({ error: "Gagal menyimpan catatan" });
+    }
+});
+
+// 2. GET: Mengambil semua catatan dari MongoDB
+app.get('/api/notes', async (req, res) => {
+    try {
+        const notes = await Note.find().sort({ createdAt: -1 }); // Urutkan dari yang terbaru
+        return res.json(notes);
+    } catch (error) {
+        return res.status(500).json({ error: "Gagal mengambil data catatan" });
     }
 });
 
