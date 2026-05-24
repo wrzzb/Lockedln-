@@ -3,98 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LockedIn-</title>
+    <title>LockedIn- Study Room</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="workspace-container">
-        <header class="panel header-panel">
-            <div class="header-section-left">
-                <h1>Personal Workspace</h1>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="user-brand">
+                <div class="avatar-circle"></div>
                 <div id="user-profile" style="display: none;">
-                    <div class="user-info">
-                        <span id="user-name"></span>
-                        <button id="logout-btn" class="btn-danger btn-xs">Logout</button>
-                    </div>
+                    <span id="user-name"></span>
+                    <button id="logout-btn" class="btn-danger-xs">Logout</button>
                 </div>
-                <button id="login-btn" class="btn-primary">Login dengan Google</button>
+                <button id="login-btn" class="btn-primary-xs">Login</button>
             </div>
+            <nav class="side-nav">
+                <a href="#" class="active"><i class="fas fa-book-open"></i> Study Room</a>
+                <a href="#"><i class="fas fa-calendar-alt"></i> Schedule</a>
+                <a href="#"><i class="fas fa-sticky-note"></i> Notes</a>
+                <label for="bg-upload" class="side-link"><i class="fas fa-image"></i> Ganti Latar</label>
+                <input type="file" id="bg-upload" hidden>
+            </nav>
+        </aside>
 
-            <div class="header-timer">
-            <div class="timer-display-mini" id="time-display">25:00</div>
-            
-            <div class="custom-timer-input" style="display: flex; gap: 5px; justify-content: center; margin: 5px 0;">
-                <input type="number" id="custom-minutes" placeholder="Min" min="1" 
-                    style="width: 50px; background: #222; border: 1px solid #444; color: white; border-radius: 4px; padding: 2px 5px; text-align: center; font-size: 0.8rem;">
-                <button id="set-custom-btn" class="btn-primary btn-xs" style="padding: 2px 8px; font-size: 0.7rem;">Set</button>
-            </div>
-
-            <div class="timer-controls-mini">
-                <button id="start-btn" class="btn-success btn-sm">Mulai</button>
-                <button id="pause-btn" class="btn-warning btn-sm">Jeda</button>
-                <button id="reset-btn" class="btn-secondary btn-sm">Reset</button>
-            </div>
-            
-            <div class="pomodoro-modes-mini">
-                <button id="mode-focus" class="active" onclick="setTimer(25, 'focus')">Focus</button>
-                <button id="mode-short" onclick="setTimer(5, 'short')">Short</button>
-            </div>
-
-            <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-        </div>
-
-            <div class="header-section-right">
-                <label for="bg-upload" class="bg-upload-label">
-                    <i class="fas fa-image"></i> Ganti Latar
-                </label>
-                <input type="file" id="bg-upload" accept="image/*" style="display: none;">
-            </div>
-        </header>
-
-        <main class="main-content">
-            <section class="panel music-panel">
-                <h2>Musik Fokus</h2>
-                <div class="spotify-area">
-                    <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/275DIkepi74lC72fsE5PLp?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-
+        <main class="study-center">
+            <header class="study-header">
+                <div class="subject-info">
+                    <h2>Study Room</h2>
                     
-                    <div class="music-upload-area" style="margin-top: 10px;">
-                        <label for="music-upload" class="upload-label-sm">
-                            <i class="fas fa-file-audio"></i> Pilih Lagu Lokal
-                        </label>
-                        <input type="file" id="music-upload" accept="audio/*" style="display: none;">
-                        <button id="stop-music-btn" class="btn-danger btn-sm" style="width: 100%; margin-top: 5px;">Stop Musik Lokal</button>
-                    </div>
-                    <audio id="bg-audio"></audio>
                 </div>
-            </section>
-
-            <section class="panel bookshelf-panel">
-                <div class="panel-header-inline">
-                    <h2>Rak Buku Materi</h2>
-                </div>
-                
-                <div class="upload-area-compact">
-                    <label for="file-upload" class="upload-label-compact">
-                        <i class="fas fa-plus"></i> Tambah Materi ke Rak
+                <div class="header-actions">
+                    <label for="file-upload" class="btn-upload-header">
+                        <i class="fas fa-plus"></i> Add Material
                     </label>
-                    <input type="file" id="file-upload" accept=".pdf,image/*" style="display: none;">
+                    <input type="file" id="file-upload" accept=".pdf,image/*" hidden>
+                    <button class="btn-session" id="start-session-btn">Start Session</button>
                 </div>
+            </header>
 
-                <div class="bookshelf-grid" id="bookshelf">
-                    </div>
-            </section>
+            <div class="main-viewer-panel">
+                <div id="viewer-placeholder" class="upload-placeholder">
+                    <i class="fas fa-file-alt" style="font-size: 4rem; color: #ccc; margin-bottom: 20px;"></i>
+                    <p>Pilih materi dari rak untuk ditampilkan</p>
+                </div>
+                <iframe id="modal-viewer" src="" style="display:none;"></iframe>
+            </div>
         </main>
-    </div>
 
-    <div id="book-modal" class="modal">
-        <span class="close-modal">&times;</span>
-        <div class="modal-content">
-            <iframe id="modal-viewer" src=""></iframe>
-        </div>
-    </div>
+        <aside class="right-panel">
+            <section class="glass-panel timer-box">
+                <div class="panel-label">Timer</div>
+                <div class="timer-row">
+                    <h1 id="time-display">25:00</h1>
+                    <div class="timer-tools">
+                        <input type="number" id="custom-minutes" placeholder="Min">
+                        <i class="fas fa-check-circle" id="set-custom-btn" title="Set Waktu"></i>
+                        <i class="fas fa-play-circle" id="start-btn" title="Mulai"></i>
+                        <i class="fas fa-pause-circle" id="pause-btn" title="Jeda"></i>
+                        <i class="fas fa-redo-alt" id="reset-btn" title="Reset"></i>
+                    </div>
+                </div>
+                <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" loop></audio>
+            </section>
 
+            <section class="glass-panel bookshelf-box">
+                <div class="panel-label">Materi Rak</div>
+                <div class="bookshelf-grid" id="bookshelf"></div>
+            </section>
+
+            <section class="glass-panel music-box">
+                <div class="panel-label">Music Player</div>
+                <div class="spotify-container">
+                    <iframe id="spotify-iframe" src="" width="100%" height="80" frameBorder="0" allow="autoplay; encrypted-media"></iframe>
+                </div>
+                <div class="playlist-config-mini">
+                    <input type="text" id="playlist-url" placeholder="Paste Spotify Link...">
+                    <button id="update-playlist-btn" class="btn-primary-xs">Update</button>
+                </div>
+                <audio id="bg-audio"></audio>
+            </section>
+        </aside>
+    </div>
     <script type="module" src="script.js"></script>
 </body>
 </html>
