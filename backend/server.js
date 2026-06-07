@@ -1,19 +1,16 @@
-require('dotenv').config();
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const fs = require('fs');
+const fs = require('fs'); // Tambahkan ini untuk menghapus file sampah di lokal
 const app = express();
-
 
 app.use(cors());
 app.use(express.json());
 
 // 1. Koneksi MongoDB
-mongoose.connect(process.env.MONGODB_URL)
+mongoose.connect('mongodb+srv://Admin:12345@workspace.1hn74vf.mongodb.net/?appName=Workspace')
     .then(() => console.log("Terhubung ke MongoDB"))
     .catch(err => console.error("Gagal koneksi MongoDB:", err));
 
@@ -27,11 +24,20 @@ const bookSchema = new mongoose.Schema({
 
 const Book = mongoose.model('Book', bookSchema);
 
+// Schema Data untuk Notes
+const noteSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Note = mongoose.model('Note', noteSchema);
+
 // 3. Konfigurasi Cloudinary
 cloudinary.config({ 
-    cloud_name: process.env.CLOUDINARY_NAME, 
-    api_key: process.env.CLOUDINARY_KEY, 
-    api_secret: process.env.CLOUDINARY_SECRET 
+    cloud_name: 'dcky4itki', 
+    api_key: '287732471984783', 
+    api_secret: 'Mq-zO5x2z4cg3w4iyuDL9SHJ8m4' 
 });
 
 // 4. Konfigurasi Multer (Penyimpanan sementara sebelum ke Cloudinary)
@@ -125,49 +131,30 @@ app.delete('/api/books/:id', async (req, res) => {
     }
 });
 
-// ==========================================
-// KODE TAMBAHAN UNTUK FITUR NOTES
-// ==========================================
+// --- ENDPOINT UNTUK NOTES ---
 
-// 1. Buat Schema Data untuk Notes
-const noteSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Note = mongoose.model('Note', noteSchema);
-
-// 2. Endpoint POST: Simpan Catatan Baru
+// 1. POST: Menyimpan catatan baru ke MongoDB
 app.post('/api/notes', async (req, res) => {
     try {
         const { title, content } = req.body;
-        if (!title || !content) {
-            return res.status(400).json({ error: "Judul dan isi tidak boleh kosong" });
-        }
-
         const newNote = new Note({ title, content });
         await newNote.save();
-        
         return res.status(201).json(newNote);
-    } catch (err) {
-        console.error("Gagal menyimpan note:", err);
+    } catch (error) {
         return res.status(500).json({ error: "Gagal menyimpan catatan" });
     }
 });
 
-// 3. Endpoint GET: Ambil Semua Catatan
+// 2. GET: Mengambil semua catatan dari MongoDB
 app.get('/api/notes', async (req, res) => {
     try {
-        // Mengambil semua catatan, diurutkan dari yang paling baru
-        const notes = await Note.find().sort({ createdAt: -1 });
-        return res.status(200).json(notes);
-    } catch (err) {
-        console.error("Gagal memuat notes:", err);
-        return res.status(500).json({ error: "Gagal memuat catatan" });
+        const notes = await Note.find().sort({ createdAt: -1 }); // Urutkan dari yang terbaru
+        return res.json(notes);
+    } catch (error) {
+        return res.status(500).json({ error: "Gagal mengambil data catatan" });
     }
 });
 
 // Jalankan Server
-const PORT = process.env.PORT;
+const PORT = 3000;
 app.listen(PORT, () => console.log(`Server berjalan di http://localhost:${PORT}`));

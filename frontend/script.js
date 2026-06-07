@@ -111,7 +111,8 @@ document.getElementById('file-upload').onchange = async (e) => {
     try {
         const res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: fd });
         if (res.ok) loadUserMaterials(user.uid);
-    }
+        else alert("Gagal mengunggah.");
+    } catch (err) { alert("Server tidak merespons."); }
     finally { label.innerHTML = original; e.target.value = ""; }
 };
 
