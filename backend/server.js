@@ -8,166 +8,206 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const app = express();
 
-
 app.use(cors());
 app.use(express.json());
 
-// 1. Koneksi MongoDB
-mongoose.connect(process.env.MONGODB_URL)
-    .then(() => console.log("Terhubung ke MongoDB"))
-    .catch(err => console.error("Gagal koneksi MongoDB:", err));
+// Database connection
+const MONGO_URI = process.env.MONGODB_URL || process.env.MONGO_URI;
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("Connected to MongoDB"))
+    .catch(err => console.error("MongoDB connection failed:", err));
 
-// 2. Schema Data
+// Book schema
 const bookSchema = new mongoose.Schema({
     userId: { type: String, required: true },
     title: String,
     url: String,
+    cloudinaryId: String, 
     uploadDate: { type: Date, default: Date.now }
 });
-
 const Book = mongoose.model('Book', bookSchema);
 
-// 3. Konfigurasi Cloudinary
+// Schedule schema
+const scheduleSchema = new mongoose.Schema({
+    userId: { type: String, required: true },
+    title: { type: String, required: true },
+    time: { type: String, required: true },
+    tag: { type: String, default: "1-week" },
+    dateString: { type: String, required: true }, 
+    deadlineString: { type: String, required: true }, 
+    completed: { type: Boolean, default: false }
+});
+const Schedule = mongoose.model('Schedule', scheduleSchema);
+
+// Note schema
+const noteSchema = new mongoose.Schema({
+    userId: { type: String, required: true },
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Note = mongoose.model('Note', noteSchema);
+
+// Cloudinary config
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_NAME, 
     api_key: process.env.CLOUDINARY_KEY, 
     api_secret: process.env.CLOUDINARY_SECRET 
 });
 
-// 4. Konfigurasi Multer (Penyimpanan sementara sebelum ke Cloudinary)
 const upload = multer({ dest: 'uploads/' });
 
-// --- ENDPOINT UPLOAD ---
+// Upload book 
 app.post('/api/upload', upload.single('file'), async (req, res) => {
-    // Pastikan path file ada sebelum diproses
     const filePath = req.file ? req.file.path : null;
-
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: "Tidak ada file yang dipilih" });
-        }
+        if (!req.file) return res.status(400).json({ error: "No file was selected" });
+        if (!req.body.userId) return res.status(400).json({ error: "User ID is required" });
 
-        if (!req.body.userId) {
-            // Jika userId kosong, hapus file sampah yang masuk lalu beri error
-            if (filePath) fs.unlinkSync(filePath);
-            return res.status(400).json({ error: "User ID wajib diisi" });
-        }
-
-        // 1. Upload ke Cloudinary
         const result = await cloudinary.uploader.upload(filePath, { 
             resource_type: "auto",
             folder: "study_room_materials"
         });
-        
-        // 2. Simpan info ke MongoDB
+
         const newBook = new Book({
             userId: req.body.userId,
             title: req.file.originalname,
-            url: result.secure_url 
+            url: result.secure_url,
+            cloudinaryId: result.public_id 
         });
 
         await newBook.save();
-
-        // 3. Hapus file sementara di lokal
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-
-        // 4. KIRIM RESPON SUKSES (Sangat penting agar frontend tidak alert 'Server tidak merespons')
-        return res.status(200).json(newBook);
-
+        return res.status(201).json(newBook);
     } catch (err) {
-        console.error("Upload Error:", err);
-        
-        // Bersihkan file lokal jika terjadi error saat upload ke Cloudinary/DB
+        return res.status(500).json({ error: "Failed to upload file", details: err.message });
+    } finally {
         if (filePath && fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
-
-        // Kirim respon error yang jelas
-        return res.status(500).json({ 
-            error: "Gagal memproses unggahan", 
-            details: err.message 
-        });
     }
 });
 
-// --- ENDPOINT AMBIL DATA ---
+// Get books by user
 app.get('/api/books/:userId', async (req, res) => {
     try {
-        const { userId } = req.params;
-        
-        if (!userId || userId === "undefined") {
-            return res.status(400).json({ error: "User ID tidak valid" });
-        }
-
-        const books = await Book.find({ userId: userId }).sort({ uploadDate: -1 });
-        
-        // Kirim array kosong jika tidak ada buku, bukan error
+        const books = await Book.find({ userId: req.params.userId }).sort({ uploadDate: -1 });
         return res.status(200).json(books); 
-
     } catch (error) {
-        console.error("Fetch Books Error:", error);
-        return res.status(500).json({ error: "Gagal mengambil data materi" });
+        return res.status(500).json({ error: "Failed to retrieve materials" });
     }
 });
 
-// --- ENDPOINT HAPUS MATERI ---
+// Delete book
 app.delete('/api/books/:id', async (req, res) => {
     try {
-        const result = await Book.findByIdAndDelete(req.params.id);
-        if (!result) {
-            return res.status(404).json({ error: "Item tidak ditemukan" });
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ error: "Material not found" });
+
+        if (book.cloudinaryId) {
+            await cloudinary.uploader.destroy(book.cloudinaryId).catch(err => 
+                console.error("Gagal hapus file di Cloudinary:", err.message)
+            );
         }
-        res.json({ message: "Materi berhasil dihapus" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+
+        await Book.findByIdAndDelete(req.params.id);
+        return res.status(200).json({ message: "Material deleted successfully from cloud storage and DB" });
+    } catch (error) { 
+        return res.status(500).json({ error: error.message }); 
     }
 });
 
-// ==========================================
-// KODE TAMBAHAN UNTUK FITUR NOTES
-// ==========================================
-
-// 1. Buat Schema Data untuk Notes
-const noteSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
+// Get schedules by user
+app.get('/api/schedules/:userId', async (req, res) => {
+    try {
+        const schedules = await Schedule.find({ userId: req.params.userId });
+        return res.status(200).json(schedules);
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to fetch schedules" });
+    }
 });
 
-const Note = mongoose.model('Note', noteSchema);
+// Create schedule
+app.post('/api/schedules', async (req, res) => {
+    try {
+        const { userId, title, time, dateString, deadlineString } = req.body;
+        if (!userId || !title || !time || !dateString || !deadlineString) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+        const newSchedule = new Schedule(req.body);
+        await newSchedule.save();
+        return res.status(201).json(newSchedule);
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to create schedule" });
+    }
+});
 
-// 2. Endpoint POST: Simpan Catatan Baru
+// Update schedule
+app.put('/api/schedules/:id', async (req, res) => {
+    try {
+        const updated = await Schedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updated) return res.status(404).json({ error: "Schedule not found" });
+        return res.status(200).json(updated);
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to update schedule" });
+    }
+});
+
+// Delete schedule
+app.delete('/api/schedules/:id', async (req, res) => {
+    try {
+        const deleted = await Schedule.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: "Schedule not found" });
+        return res.status(200).json({ message: "Schedule deleted successfully" });
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to delete schedule" });
+    }
+});
+
+// Create note
 app.post('/api/notes', async (req, res) => {
     try {
-        const { title, content } = req.body;
-        if (!title || !content) {
-            return res.status(400).json({ error: "Judul dan isi tidak boleh kosong" });
-        }
-
-        const newNote = new Note({ title, content });
+        const { userId, title, content } = req.body;
+        if (!userId || !title || !content) return res.status(400).json({ error: "Missing fields" });
+        const newNote = new Note({ userId, title, content });
         await newNote.save();
-        
         return res.status(201).json(newNote);
     } catch (err) {
-        console.error("Gagal menyimpan note:", err);
-        return res.status(500).json({ error: "Gagal menyimpan catatan" });
+        return res.status(500).json({ error: "Failed to save note" });
     }
 });
 
-// 3. Endpoint GET: Ambil Semua Catatan
-app.get('/api/notes', async (req, res) => {
+// Get notes by user
+app.get('/api/notes/:userId', async (req, res) => {
     try {
-        // Mengambil semua catatan, diurutkan dari yang paling baru
-        const notes = await Note.find().sort({ createdAt: -1 });
+        const notes = await Note.find({ userId: req.params.userId }).sort({ createdAt: -1 });
         return res.status(200).json(notes);
     } catch (err) {
-        console.error("Gagal memuat notes:", err);
-        return res.status(500).json({ error: "Gagal memuat catatan" });
+        return res.status(500).json({ error: "Failed to load notes" });
     }
 });
 
-// Jalankan Server
-const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Server berjalan di http://localhost:${PORT}`));
+// Update note
+app.put('/api/notes/:id', async (req, res) => {
+    try {
+        const updatedNote = await Note.findByIdAndUpdate(req.params.id, { title: req.body.title, content: req.body.content }, { new: true });
+        if (!updatedNote) return res.status(404).json({ error: "Note not found" });
+        return res.status(200).json(updatedNote);
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to update note" });
+    }
+});
+
+// Delete note
+app.delete('/api/notes/:id', async (req, res) => {
+    try {
+        const deletedNote = await Note.findByIdAndDelete(req.params.id);
+        if (!deletedNote) return res.status(404).json({ error: "Note not found" });
+        return res.status(200).json({ message: "Note deleted successfully" });
+    } catch (err) {
+        return res.status(500).json({ error: "Failed to delete note" });
+    }
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

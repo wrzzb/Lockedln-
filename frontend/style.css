@@ -1,247 +1,778 @@
 :root {
-    --bg-dark: #1e252b;
-    --sidebar-bg: #151a1e;
-    --panel-bg: #f8f9fa;
+    --bg-dark: #12161a;
+    --sidebar-bg: #161b22;
+    --panel-bg: rgba(22, 27, 34, 0.7); 
     --accent: #00adb5;
+    --accent-hover: #00c2cb;
+    
+    /* Sinkronisasi Tema Kalender (Dark Glassmorphism) */
+    --calendar-container-bg: #1e252b; 
+    --calendar-card-bg: rgba(255, 255, 255, 0.04);
+    --calendar-text: #ffffff;
+    --calendar-text-muted: #94a3b8;
+    
+    --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 body {
-    margin: 0; background-color: var(--bg-dark);
-    color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden;
-}
-
-.app-container { display: flex; height: 100vh; }
-
-/* SIDEBAR */
-.sidebar { width: 220px; background: var(--sidebar-bg); padding: 30px 20px; display: flex; flex-direction: column; }
-.avatar-circle { width: 50px; height: 50px; background: var(--accent); border-radius: 50%; margin: 0 auto 15px; }
-.side-nav a, .side-link { display: flex; align-items: center; gap: 12px; color: #aebbc1; text-decoration: none; padding: 12px 15px; font-size: 0.9rem; border-radius: 10px; cursor: pointer; margin-bottom: 5px; }
-.side-nav a.active, .side-nav a:hover { color: var(--accent); background: rgba(0, 173, 181, 0.1); }
-
-/* MAIN STUDY AREA */
-.study-center { flex: 1; padding: 30px; display: flex; flex-direction: column; }
-.study-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-.header-actions { display: flex; gap: 12px; }
-
-.btn-upload-header { background: rgba(0, 173, 181, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
-.btn-upload-header:hover { background: var(--accent); color: white; }
-.btn-session { background: var(--accent); border: none; color: white; padding: 10px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; }
-
-.main-viewer-panel { flex: 1; background: var(--panel-bg); border-radius: 30px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; }
-#modal-viewer { width: 100%; height: 100%; border: none; background: white; }
-.upload-placeholder { color: #888; text-align: center; }
-
-/* RIGHT PANEL */
-.right-panel { width: 360px; padding: 25px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-.glass-panel { background: var(--panel-bg); border-radius: 28px; padding: 22px; color: #333; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-.panel-label { font-size: 0.7rem; font-weight: 800; color: #999; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-
-/* TIMER */
-.timer-row { display: flex; justify-content: space-between; align-items: center; }
-.timer-row h1 { font-size: 2.8rem; margin: 0; font-weight: 700; color: #222; }
-.timer-tools { display: flex; align-items: center; gap: 12px; }
-.timer-tools i { font-size: 1.5rem; color: var(--accent); cursor: pointer; transition: 0.2s; }
-#custom-minutes { width: 50px; height: 32px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-weight: 600; }
-
-/* BOOKSHELF */
-.bookshelf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: 220px; overflow-y: auto; padding-right: 5px; }
-.book-wrapper { position: relative; }
-.book-item { width: 100%; height: 90px; border-radius: 12px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; text-align: center; padding: 8px; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
-.book-item:hover { transform: translateY(-5px); }
-.delete-book-btn { position: absolute; top: -5px; right: -5px; background: #ff4d4d; border: none; border-radius: 50%; color: white; cursor: pointer; width: 22px; height: 22px; font-size: 14px; font-weight: bold; }
-
-/* UTILS */
-.btn-primary-xs { background: var(--accent); color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
-.btn-danger-xs { background: #ff4d4d; color: white; border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
-
-/* Container Utama Halaman Notes */
-#notes-page {
-    display: none; 
-    width: 100%; 
-    height: 100%; 
-    padding: 25px; 
-    box-sizing: border-box;
-}
-
-/* Wrapper Flexbox Kiri & Kanan */
-.notes-wrapper {
-    display: flex;
-    gap: 25px;
-    height: calc(100vh - 140px); /* Membatasi tinggi agar tidak tembus layout bawah screen */
-    align-items: flex-start;
-}
-
-/* 1. KOTAK FORM INPUT (KIRI) */
-.notes-input-box {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 20px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    max-height: 100%; /* Menjaga agar form tidak melorot ke bawah */
-    box-sizing: border-box;
-}
-
-/* Input Judul */
-.notes-input-box input {
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.2);
-    color: #ffffff !important; /* Teks ketikan menjadi putih bersih */
-    font-size: 0.95rem;
-    font-weight: 500;
-    outline: none;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-}
-
-/* Textarea Isi Catatan */
-.notes-input-box textarea {
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.2);
-    color: #ffffff !important; /* Teks isi menjadi putih bersih */
-    font-size: 0.9rem;
-    line-height: 1.5;
-    resize: none;
-    outline: none;
-    height: 220px; /* Membatasi tinggi input ketikan agar proporsional */
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-}
-
-/* Efek Focus saat Input Diklik */
-.notes-input-box input:focus, 
-.notes-input-box textarea:focus {
-    border-color: var(--accent);
-    background: rgba(0, 0, 0, 0.3);
-    box-shadow: 0 0 10px rgba(0, 173, 181, 0.2);
-}
-
-/* Warna Placeholder text */
-.notes-input-box input::placeholder,
-.notes-input-box textarea::placeholder {
-    color: rgba(255, 255, 255, 0.3) !important;
-}
-
-/* TOMBOL SIMPAN CATATAN */
-#btn-save-note {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: 0.5px;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(0, 173, 181, 0.3);
-}
-
-#btn-save-note:hover {
-    background: #00c2cb;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0, 173, 181, 0.4);
-}
-
-#btn-save-note:active {
-    transform: translateY(1px);
-}
-
-
-/* 2. WADAH DAFTAR CATATAN (KANAN) */
-#notes-list-container {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-height: 100%; /* Sesuai dengan tinggi wrapper agar otomatis nge-scroll di dalam */
-    padding-right: 8px;
-    box-sizing: border-box;
-}
-
-/* Item Card Catatan */
-.note-card-item {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-left: 4px solid var(--accent);
-    padding: 18px;
-    border-radius: 14px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-    backdrop-filter: blur(5px);
-}
-
-.note-card-item:hover {
-    transform: translateX(3px);
-    background: rgba(255, 255, 255, 0.07);
-    border-left-width: 6px;
-}
-
-/* Judul di dalam Card */
-.note-card-item h4 {
-    margin: 0 0 6px 0;
-    color: var(--accent) !important;
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-/* Isi Teks di dalam Card */
-.note-card-item p {
     margin: 0;
-    font-size: 0.88rem;
-    line-height: 1.45;
-    color: #e2e8f0 !important; /* Teks isi card abu-abu terang terang elegan */
-    white-space: pre-wrap;
+    background-color: var(--bg-dark);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* Desain Scrollbar untuk List Catatan */
-#notes-list-container::-webkit-scrollbar {
-    width: 5px;
-}
-#notes-list-container::-webkit-scrollbar-track {
-    background: transparent;
-}
-#notes-list-container::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-}
-#notes-list-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-/* ==SWAP LAYOUT POSITIONS== */
-
-/* Memastikan susunan utama fleksibel */
 .app-container {
     display: flex;
+    height: 100vh;
+    width: 100vw;
 }
 
-/* 1. Sidebar tetap di paling kiri (Urutan 1) */
+/* UTILITY ANTI PENUMPUKAN HALAMAN */
+.hidden-page {
+    display: none !important;
+}
+
+/* Sidebar layout */
 .sidebar {
-    order: 1;
+    width: 240px;
+    min-width: 240px;
+    background: var(--sidebar-bg);
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    border-right: 1px solid var(--glass-border);
 }
 
-/* 2. Mengubah Halaman Utama & Notes agar berada di Tengah (Urutan 2) */
-.study-center, 
-#notes-page {
-    order: 2;
-    flex: 1; 
+.sidebar-top {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
 }
 
-/* 3. Mengubah Panel Kanan (Timer, Rak, Music) agar pindah ke paling Kanan (Urutan 3) */
+/* Sidebar user profile */
+.user-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 16px;
+    box-sizing: border-box;
+}
+
+.avatar-circle {
+    width: 64px;
+    height: 64px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0, 173, 181, 0.4);
+}
+
+#user-profile {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-align: center;
+}
+
+/* Sidebar navigation */
+.side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.side-nav a, .side-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #aebbc1;
+    text-decoration: none;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.side-nav a.active, .side-nav a:hover, .side-link:hover {
+    color: var(--accent);
+    background: rgba(0, 173, 181, 0.08);
+}
+
+/* Buttons */
+.btn-login-container {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    background: rgba(0, 173, 181, 0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0, 173, 181, 0.2);
+    padding: 14px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn-login-container:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    background: rgba(255, 77, 77, 0.1);
+    color: #ff4d4d;
+    border: 1px solid rgba(255, 77, 77, 0.2);
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+    background: #ff4d4d;
+    color: white;
+}
+
+/* Study area */
+.study-center {
+    flex: 1;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.study-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-upload-header {
+    background: rgba(0, 173, 181, 0.1);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-upload-header:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-session {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-session:hover {
+    background: var(--accent-hover);
+}
+
+.main-viewer-panel {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03); 
+    border: 1px solid var(--glass-border);
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#modal-viewer {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+}
+
+.upload-placeholder {
+    color: #666;
+    text-align: center;
+}
+
+/* SCHEDULE PANEL */
+.schedule-center {
+    flex: 1;
+    padding: 24px; 
+    display: flex;
+    flex-direction: column;
+    background: var(--calendar-container-bg);
+    color: var(--calendar-text);
+    overflow-y: auto;
+}
+
+.schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.calendar-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendar-icon {
+    font-size: 1.6rem;
+    color: var(--accent);
+}
+
+.custom-select-wrapper {
+    position: relative;
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding-right: 30px;
+}
+
+.custom-select-wrapper::after {
+    content: '▼';
+    font-size: 0.7rem;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--calendar-text-muted);
+    pointer-events: none;
+}
+
+.calendar-dropdown {
+    background: transparent !important;
+    border: none !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: var(--calendar-text) !important;
+    cursor: pointer;
+    outline: none;
+    padding: 6px 10px;
+    appearance: none; 
+    -webkit-appearance: none;
+}
+
+.calendar-dropdown option {
+    background-color: var(--bg-dark);
+    color: #ffffff;
+}
+
+.calendar-grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.weekday-labels {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--calendar-text-muted);
+    padding-left: 5px;
+    margin-bottom: 4px;
+}
+
+.sun-label { color: #ef4444; }
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.day-card {
+    background: var(--calendar-card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 6px 10px; 
+    min-height: 42px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: var(--calendar-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.day-card:hover {
+    transform: scale(1.03);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.day-number {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.day-task-count {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--calendar-text-muted);
+    margin-top: 2px;
+}
+
+.day-card.active-day {
+    background: var(--accent);
+    color: white;
+}
+
+.day-card.active-day .day-task-count {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.day-card.today-highlight {
+    border: 2px solid var(--accent);
+}
+
+.day-card.deadline-day {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid #ef4444;
+}
+
+.day-card.empty-day {
+    background: transparent;
+    border: none;
+    cursor: default;
+    pointer-events: none;
+}
+
+.day-card.empty-day * { display: none; }
+
+.schedule-details-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.details-date-banner {
+    background: var(--calendar-card-bg);
+    border: 1px solid var(--glass-border);
+    padding: 10px 18px;
+    border-radius: 8px;
+    display: flex;
+    gap: 40px;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--calendar-text);
+}
+
+.tasks-list-scrollable {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.task-item-card {
+    background: var(--calendar-card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.task-item-card.task-completed { opacity: 0.4; }
+.task-item-card.task-completed h4 { text-decoration: line-through; }
+
+.task-item-left { display: flex; align-items: center; gap: 14px; }
+
+.task-checkbox-mock {
+    width: 22px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: var(--accent);
+}
+
+.task-info-block h4 { margin: 0 0 2px 0; font-size: 1rem; font-weight: 700; }
+
+.task-tag-badge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.task-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.task-time-label { font-weight: 700; font-size: 1rem; }
+.task-deadline-notice { font-size: 0.85rem; font-weight: 700; color: #ef4444; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.add-schedule-trigger-card {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    background: transparent;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--calendar-text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.add-schedule-trigger-card:hover {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   RIGHT PANEL LAYOUT (DIPERLEBAR KE 415PX UNTUK RUANG BEBAS KOMPONEN)
+   ========================================================================== */
 .right-panel {
-    order: 3;
-    width: 360px; 
+    width: 415px; 
+    min-width: 415px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px; 
+    overflow-y: auto;
+    background: rgba(21, 26, 30, 0.3);
+    border-left: 1px solid var(--glass-border);
+    box-sizing: border-box;
+}
+
+.glass-panel {
+    background: var(--panel-bg);
+    border-radius: 20px; 
+    padding: 22px;
+    color: #ffffff; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.panel-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- TIMER BOX ALIGNMENT GROUP --- */
+.timer-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.timer-row h1 { 
+    font-size: 3rem; 
+    margin: 0; 
+    font-weight: 700; 
+    font-variant-numeric: tabular-nums; 
+    flex-shrink: 0;
+}
+
+.timer-tools { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    flex-shrink: 0;
+}
+
+#custom-minutes {
+    width: 54px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+#custom-minutes:focus {
+    border-color: var(--accent);
+}
+
+#custom-minutes::-webkit-outer-spin-button,
+#custom-minutes::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.timer-tools i { 
+    font-size: 1.6rem; 
+    color: var(--accent); 
+    cursor: pointer; 
+    transition: transform 0.2s ease, color 0.2s ease; 
+}
+
+.timer-tools i:hover { 
+    color: var(--accent-hover);
+    transform: scale(1.15);
+}
+
+.timer-tools i:active {
+    transform: scale(0.85);
+    transition: transform 0.05s ease;
+}
+
+/* --- MUSIC PLAYER COMPONENT ALIGNMENT (AKTIVASI VOLUME DAN QUEUE) --- */
+.spotify-container {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    margin-bottom: 14px;
+    height: 152px; /* Ditinggikan dari 80px untuk mengaktifkan UI playlist dan volume slider bawaan Spotify */
+}
+
+#spotify-iframe {
+    height: 152px !important; /* Memaksa iframe mengikuti tinggi kontainer baru */
+}
+
+.playlist-config-mini { 
+    display: flex; 
+    gap: 8px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.playlist-config-mini input {
+    flex: 1; 
+    background: rgba(0, 0, 0, 0.3); 
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px; 
+    padding: 10px 14px; 
+    color: white; 
+    font-size: 0.85rem; 
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.playlist-config-mini input:focus {
+    border-color: var(--accent);
+}
+
+.playlist-config-mini .btn-primary-xs {
+    background: var(--accent); 
+    color: white; 
+    border: none; 
+    padding: 0 18px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 0.85rem; 
+    font-weight: 600;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.playlist-config-mini .btn-primary-xs:hover {
+    background: var(--accent-hover);
+}
+
+.playlist-config-mini .btn-primary-xs:active {
+    transform: scale(0.95);
+}
+
+/* --- MATERIAL SHELF / BOOKSHELF (RE-POSITIONING BUTTON ANTI-CUTTING) --- */
+.bookshelf-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 14px; /* Ditambahkan sedikit space */
+    max-height: 240px; 
+    overflow-y: auto; 
+    padding: 6px 4px 6px 2px; /* Ditambahkan padding atas-bawah agar tombol silang memiliki ruang aman */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.book-wrapper { 
+    position: relative; 
+    width: 100%; 
+}
+
+.book-item {
+    width: 100%; 
+    height: 90px; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    color: white;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 0.65rem;
+    text-align: center; 
+    padding: 8px; 
+    font-weight: 600; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease; 
+    box-sizing: border-box;
+}
+
+.book-item:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+/* Penyesuaian koordinat tombol silang agar masuk ke dalam grid tanpa terpotong batas overflow */
+.delete-book-btn {
+    position: absolute; 
+    top: 4px; 
+    right: 4px; 
+    background: rgba(255, 77, 77, 0.85); 
+    border: none;
+    border-radius: 4px; /* Diubah menjadi kotak melengkung modern */
+    color: white; 
+    cursor: pointer; 
+    width: 18px; 
+    height: 18px;
+    font-size: 11px; 
+    font-weight: bold; 
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.delete-book-btn:hover {
+    background: #ff4d4d;
+    transform: scale(1.1);
+}
+
+/* Notes Section */
+#notes-page { width: 100%; height: 100%; padding: 30px; box-sizing: border-box; }
+.notes-wrapper { display: flex; gap: 30px; height: 100%; align-items: stretch; width: 100%; box-sizing: border-box; }
+.notes-input-box {
+    width: 380px; min-width: 380px; background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 20px; padding: 22px;
+    display: flex; flex-direction: column; gap: 15px; backdrop-filter: blur(10px); height: 100%; box-sizing: border-box;
+}
+
+.notes-input-box input, .notes-input-box textarea {
+    width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2); color: #ffffff !important; outline: none; box-sizing: border-box;
+}
+.notes-input-box textarea { resize: none; flex: 1; }
+.notes-input-box input:focus, .notes-input-box textarea:focus {
+    border-color: var(--accent); background: rgba(0, 0, 0, 0.3); box-shadow: 0 0 10px rgba(0, 173, 181, 0.2);
+}
+
+#btn-save-note {
+    width: 100%; padding: 14px; background: var(--accent); color: white; border: none;
+    border-radius: 12px; cursor: pointer; font-weight: 700; box-shadow: 0 4px 15px rgba(0, 173, 181, 0.3);
+}
+
+#notes-list-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; height: 100%; box-sizing: border-box; }
+.note-card-item {
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 4px solid var(--accent); padding: 18px; border-radius: 14px; position: relative; box-sizing: border-box;
+}
+.note-card-item h4 { margin: 0 0 6px 0; color: var(--accent) !important; font-size: 1.1rem; }
+.note-card-item p { margin: 0; font-size: 0.88rem; line-height: 1.45; color: #e2e8f0 !important; white-space: pre-wrap; }
+.note-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 12px; }
+.note-actions button { background: transparent; border: none; cursor: pointer; font-size: 0.95rem; }
+.edit-btn { color: #ffb703; }
+.delete-btn { color: #ff4d4d; }
+
+/* Scrollbars Global */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+/* Modals */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: #1e252b; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;
+    width: 450px; max-width: 90%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    transform: translateY(-20px); transition: transform 0.3s ease;
+}
+.modal-overlay.active .modal-content { transform: translateY(0); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 14px; margin-bottom: 20px; }
+.modal-close-x { background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
+.modal-form { display: flex; flex-direction: column; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group label { font-size: 0.85rem; font-weight: 600; color: #94a3b8; }
+.form-group input { background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 10px 14px; color: #ffffff; outline: none; }
+.form-group input:focus { border-color: var(--accent); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px; }
+.btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #e2e8f0; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.btn-primary { background: var(--accent); border: none; color: #ffffff; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
+/* Mikro-Interaksi Task List */
+.task-deadline-notice:hover {
+    color: var(--accent-hover);
+}
+
+.task-deadline-notice i {
+    transition: transform 0.2s;
+}
+
+.task-deadline-notice:hover i {
+    transform: scale(1.2);
 }
