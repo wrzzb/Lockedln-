@@ -1,0 +1,646 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBiliBfdE0sDHI3weYESCMXV-vZppHR-Fc",
+    authDomain: "workspace-76489.firebaseapp.com",
+    projectId: "workspace-76489",
+    storageBucket: "workspace-76489.firebasestorage.app",
+    messagingSenderId: "958477046057",
+    appId: "1:958477046057:web:f50af0fcbfaca6a087e738"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const provider = new GoogleAuthProvider();
+
+let timerInterval, timeLeft = 25 * 60, isRunning = false;
+
+function updateDisplay() {
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    const text = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    document.getElementById('time-display').textContent = text;
+    const focusDisplay = document.getElementById('focus-time-display');
+    if (focusDisplay) focusDisplay.textContent = text;
+}
+
+function animateTimerButton(buttonId) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    btn.style.transform = "scale(0.85)";
+    btn.style.transition = "transform 0.1s ease";
+    setTimeout(() => { btn.style.transform = ""; }, 100);
+}
+
+document.getElementById('set-custom-btn').onclick = () => {
+    animateTimerButton('set-custom-btn');
+    const mins = parseInt(document.getElementById('custom-minutes').value);
+    if (mins > 0) { 
+        clearInterval(timerInterval); 
+        isRunning = false; 
+        timeLeft = mins * 60; 
+        updateDisplay(); 
+    }
+};
+
+function startTimer() {
+    if (isRunning) return;
+    isRunning = true;
+    timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+            timeLeft--;
+            updateDisplay();
+        } else {
+            clearInterval(timerInterval);
+            isRunning = false;
+            document.getElementById('alarm-sound').play();
+            if (focusSessionActive) endFocusSession("Time's up! Great work staying focused.");
+            alert("Session completed!");
+        }
+    }, 1000);
+}
+
+document.getElementById('start-btn').onclick = () => {
+    animateTimerButton('start-btn');
+    startTimer();
+};
+
+document.getElementById('pause-btn').onclick = () => { 
+    animateTimerButton('pause-btn');
+    clearInterval(timerInterval); 
+    isRunning = false; 
+};
+
+document.getElementById('reset-btn').onclick = () => {
+    animateTimerButton('reset-btn');
+    clearInterval(timerInterval); 
+    isRunning = false; 
+    timeLeft = 25 * 60; 
+    updateDisplay();
+    const alarm = document.getElementById('alarm-sound'); 
+    alarm.pause(); 
+    alarm.currentTime = 0;
+};
+
+// --- Focus Session ("Start Session" lock mode) ---
+// Keeps the user on the Study Room page: sidebar links to other pages are
+// disabled, and switching to another browser tab/window/app is tracked as
+// a "distraction" (a website cannot forcibly block app/window switching).
+const focusBanner = document.getElementById('focus-session-banner');
+const focusBannerStatus = document.getElementById('focus-banner-status');
+const startSessionBtn = document.getElementById('start-session-btn');
+const endSessionBtn = document.getElementById('end-session-btn');
+const distractionBadge = document.getElementById('focus-distraction-badge');
+const distractionCountEl = document.getElementById('focus-distraction-count');
+
+let focusSessionActive = false;
+let distractionCount = 0;
+let wakeLockHandle = null;
+
+const FOCUS_BANNER_DEFAULT_STATUS = '<i class="fas fa-lock"></i> Focus Session Active';
+
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLockHandle = await navigator.wakeLock.request('screen');
+        }
+    } catch (err) {
+        console.warn('Wake Lock unavailable:', err);
+    }
+}
+
+async function releaseWakeLock() {
+    if (wakeLockHandle) {
+        try { await wakeLockHandle.release(); } catch (err) { /* already released */ }
+        wakeLockHandle = null;
+    }
+}
+
+function flagDistraction() {
+    if (!focusSessionActive) return;
+    distractionCount++;
+    distractionCountEl.textContent = distractionCount;
+    distractionBadge.classList.remove('flash');
+    void distractionBadge.offsetWidth;
+    distractionBadge.classList.add('flash');
+}
+
+function handleVisibilityChange() {
+    if (focusSessionActive && document.hidden) flagDistraction();
+}
+
+function handleBeforeUnload(e) {
+    if (!focusSessionActive) return;
+    e.preventDefault();
+    e.returnValue = '';
+}
+
+async function startFocusSession() {
+    if (focusSessionActive) return;
+    focusSessionActive = true;
+    distractionCount = 0;
+    distractionCountEl.textContent = '0';
+    distractionBadge.classList.remove('flash');
+    focusBannerStatus.innerHTML = FOCUS_BANNER_DEFAULT_STATUS;
+    focusBannerStatus.classList.remove('warn');
+
+    switchView(menuStudyBtn, studyRoomPage);
+    focusBanner.classList.add('active');
+    startTimer();
+
+    await requestWakeLock();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+}
+
+function endFocusSession(message) {
+    if (!focusSessionActive) return;
+    focusSessionActive = false;
+
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+
+    focusBanner.classList.remove('active');
+    releaseWakeLock();
+
+    if (message) {
+        setTimeout(() => alert(`${message}\n\nTimes you switched away: ${distractionCount}`), 250);
+    }
+}
+
+if (startSessionBtn) startSessionBtn.onclick = startFocusSession;
+if (endSessionBtn) endSessionBtn.onclick = () => endFocusSession("Session ended early.");
+
+const NOTE_API_URL = 'http://localhost:3000/api/notes';
+const SCHEDULE_API_URL = 'http://localhost:3000/api/schedules';
+
+const menuStudyBtn = document.getElementById('menu-study');
+const menuScheduleBtn = document.getElementById('menu-schedule');
+const menuNotesBtn = document.getElementById('menu-notes');
+
+const studyRoomPage = document.getElementById('study-room-page');
+const schedulePage = document.getElementById('schedule-page');
+const notesPageArea = document.getElementById('notes-page');
+
+const btnSaveNote = document.getElementById('btn-save-note');
+const noteIdInput = document.getElementById('note-id');
+const noteTitleInput = document.getElementById('note-title');
+const noteContentInput = document.getElementById('note-content');
+const notesListContainer = document.getElementById('notes-list-container');
+
+const scheduleModal = document.getElementById('schedule-modal');
+const scheduleForm = document.getElementById('schedule-form');
+const triggerAddBtn = document.getElementById('trigger-add-schedule');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const cancelModalBtn = document.getElementById('btn-cancel-schedule');
+
+const modalScheduleTitle = document.getElementById('modal-schedule-title');
+const modalTaskIdInput = document.getElementById('modal-task-id');
+const btnDeleteSchedule = document.getElementById('btn-delete-schedule');
+const btnSubmitSchedule = document.getElementById('btn-submit-schedule');
+
+let userSchedules = [];
+let selectedDateStringGlobal = "";
+const today = new Date();
+let currentYear = today.getFullYear();
+let currentMonthIndex = today.getMonth();
+
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const dayNamesShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function switchView(activeMenu, activePage) {
+    [menuStudyBtn, menuScheduleBtn, menuNotesBtn].forEach(btn => {
+        if (btn) btn.classList.remove('active');
+    });
+    [studyRoomPage, schedulePage, notesPageArea].forEach(page => {
+        if (page) page.classList.add('hidden-page');
+    });
+    if (activeMenu) activeMenu.classList.add('active');
+    if (activePage) activePage.classList.remove('hidden-page');
+}
+
+function initDropdowns() {
+    const mSelect = document.getElementById('calendar-month-select');
+    const ySelect = document.getElementById('calendar-year-select');
+    if (!mSelect || !ySelect) return;
+
+    mSelect.innerHTML = ""; ySelect.innerHTML = "";
+
+    monthNames.forEach((m, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx; opt.textContent = m;
+        if (idx === currentMonthIndex) opt.selected = true;
+        mSelect.appendChild(opt);
+    });
+
+    for (let y = 2020; y <= 2035; y++) {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        ySelect.appendChild(opt);
+    }
+
+    mSelect.onchange = (e) => { currentMonthIndex = parseInt(e.target.value); renderCalendar(); };
+    ySelect.onchange = (e) => { currentYear = parseInt(e.target.value); renderCalendar(); };
+}
+
+function makeDateString(d, m, y) {
+    return `${d}/${String(m + 1).padStart(2, '0')}/${String(y).substring(2)}`;
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendar-days-grid');
+    if (!grid) return;
+    grid.innerHTML = "";
+
+    const firstDayDate = new Date(currentYear, currentMonthIndex, 1);
+    let firstDayIndex = (firstDayDate.getDay() + 6) % 7;
+
+    const totalDays = new Date(currentYear, currentMonthIndex + 1, 0).getDate();
+
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCard = document.createElement('div');
+        emptyCard.className = 'day-card empty-day';
+        grid.appendChild(emptyCard);
+    }
+
+    const deadlinesThisMonth = userSchedules.map(s => s.deadlineString);
+
+    for (let day = 1; day <= totalDays; day++) {
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        
+        const loopDateStr = makeDateString(day, currentMonthIndex, currentYear);
+        const todayDateStr = makeDateString(today.getDate(), today.getMonth(), today.getFullYear());
+
+        if (loopDateStr === todayDateStr) dayCard.classList.add('today-highlight');
+        if (loopDateStr === selectedDateStringGlobal) dayCard.classList.add('active-day');
+        if (deadlinesThisMonth.includes(loopDateStr)) dayCard.classList.add('deadline-day');
+
+        const dayTasks = userSchedules.filter(s => s.dateString === loopDateStr);
+        const taskText = dayTasks.length > 0 ? `Task to do: ${dayTasks.length}` : 'Task to do: -';
+
+        dayCard.innerHTML = `
+            <span class="day-number">${day}</span>
+            <span class="day-task-count">${taskText}</span>
+        `;
+
+        dayCard.onclick = () => {
+            selectedDateStringGlobal = loopDateStr;
+            document.querySelectorAll('#calendar-days-grid .day-card').forEach(card => card.classList.remove('active-day'));
+            dayCard.classList.add('active-day');
+            
+            const selectedDateObj = new Date(currentYear, currentMonthIndex, day);
+            let dayOfWeekIndex = (selectedDateObj.getDay() + 6) % 7;
+
+            document.getElementById('selected-day-name').textContent = dayNamesShort[dayOfWeekIndex];
+            document.getElementById('selected-date-string').textContent = loopDateStr;
+            renderTasksList();
+        };
+
+        grid.appendChild(dayCard);
+    }
+}
+
+async function loadSchedules(uid) {
+    if (!uid) return;
+    try {
+        const res = await fetch(`${SCHEDULE_API_URL}/${uid}`);
+        userSchedules = await res.json();
+        renderCalendar();
+        renderTasksList();
+    } catch (err) {
+        console.error("Failed to load schedules:", err);
+    }
+}
+
+function renderTasksList() {
+    const container = document.getElementById('tasks-container');
+    if (!container) return;
+    container.innerHTML = "";
+
+    const activeTasks = userSchedules.filter(s => s.dateString === selectedDateStringGlobal);
+
+    activeTasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = 'task-item-card';
+        if (task.completed) card.classList.add('task-completed');
+
+        card.innerHTML = `
+            <div class="task-item-left">
+                <div class="task-checkbox-mock">${task.completed ? '<i class="fas fa-check"></i>' : ''}</div>
+                <div class="task-info-block">
+                    <h4>${task.title}</h4>
+                    <span class="task-tag-badge">${task.tag}</span>
+                </div>
+            </div>
+            <div class="task-item-right">
+                <span class="task-time-label">${task.time}</span>
+                <span class="task-deadline-notice">Deadline: ${task.deadlineString} <i class="far fa-edit"></i></span>
+            </div>
+        `;
+
+        card.querySelector('.task-checkbox-mock').onclick = async (e) => {
+            e.stopPropagation();
+            try {
+                const res = await fetch(`${SCHEDULE_API_URL}/${task._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ completed: !task.completed })
+                });
+                if (res.ok) loadSchedules(auth.currentUser.uid);
+            } catch (err) { console.error(err); }
+        };
+
+        card.querySelector('.task-deadline-notice').onclick = (e) => {
+            e.stopPropagation();
+            openEditScheduleModal(task);
+        };
+
+        container.appendChild(card);
+    });
+}
+
+function openScheduleModal() {
+    const user = auth.currentUser;
+    if (!user) return alert("Please log in first.");
+    
+    modalTaskIdInput.value = ''; 
+    if (btnDeleteSchedule) btnDeleteSchedule.style.display = 'none';
+    
+    if (modalScheduleTitle) modalScheduleTitle.innerHTML = '<i class="fas fa-calendar-plus"></i> New Schedule';
+    if (btnSubmitSchedule) btnSubmitSchedule.textContent = 'Add Schedule';
+
+    document.getElementById('modal-task-title').value = '';
+    document.getElementById('modal-task-time').value = '08.00';
+    document.getElementById('modal-task-tag').value = '1-week';
+    document.getElementById('modal-task-deadline').value = selectedDateStringGlobal;
+    
+    scheduleModal.classList.add('active');
+}
+
+function openEditScheduleModal(task) {
+    modalTaskIdInput.value = task._id; 
+    if (btnDeleteSchedule) btnDeleteSchedule.style.display = 'block';
+    
+    if (modalScheduleTitle) modalScheduleTitle.innerHTML = '<i class="fas fa-calendar-alt"></i> Edit Schedule';
+    if (btnSubmitSchedule) btnSubmitSchedule.textContent = 'Update Schedule';
+
+    document.getElementById('modal-task-title').value = task.title;
+    document.getElementById('modal-task-time').value = task.time;
+    document.getElementById('modal-task-tag').value = task.tag;
+    document.getElementById('modal-task-deadline').value = task.deadlineString;
+    
+    scheduleModal.classList.add('active');
+}
+
+function closeScheduleModal() { scheduleModal.classList.remove('active'); }
+
+if (triggerAddBtn) triggerAddBtn.onclick = openScheduleModal;
+if (closeModalBtn) closeModalBtn.onclick = closeScheduleModal;
+if (cancelModalBtn) cancelModalBtn.onclick = closeScheduleModal;
+
+window.addEventListener('click', (e) => { if (e.target === scheduleModal) closeScheduleModal(); });
+
+if (btnDeleteSchedule) {
+    btnDeleteSchedule.onclick = async () => {
+        const id = modalTaskIdInput.value;
+        if (!id) return;
+        if (confirm("Delete this schedule permanently?")) {
+            try {
+                const res = await fetch(`${SCHEDULE_API_URL}/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    closeScheduleModal();
+                    loadSchedules(auth.currentUser.uid);
+                }
+            } catch (err) { console.error("Error deleting schedule:", err); }
+        }
+    };
+}
+
+if (scheduleForm) {
+    scheduleForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) return alert("Session expired.");
+
+        const id = modalTaskIdInput.value;
+        const title = document.getElementById('modal-task-title').value.trim();
+        const time = document.getElementById('modal-task-time').value.trim();
+        const tag = document.getElementById('modal-task-tag').value.trim();
+        const deadline = document.getElementById('modal-task-deadline').value.trim();
+
+        const url = id ? `${SCHEDULE_API_URL}/${id}` : SCHEDULE_API_URL;
+        const method = id ? 'PUT' : 'POST';
+        
+        const payload = id 
+            ? { title, time, tag, deadlineString: deadline }
+            : { userId: user.uid, title, time, tag, dateString: selectedDateStringGlobal, deadlineString: deadline, completed: false };
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) { closeScheduleModal(); loadSchedules(user.uid); }
+        } catch (err) { console.error("Error saving schedule:", err); }
+    };
+}
+
+onAuthStateChanged(auth, (user) => {
+    const loginBtn = document.getElementById('login-btn');
+    const userProfile = document.getElementById('user-profile');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    if (user) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (userProfile) userProfile.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'flex';
+        document.getElementById('user-name').textContent = user?.displayName || "User";
+        loadUserMaterials(user.uid);
+        loadSchedules(user.uid);
+        switchView(menuStudyBtn, studyRoomPage);
+    } else {
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (userProfile) userProfile.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        document.getElementById('bookshelf').innerHTML = "";
+        switchView(menuStudyBtn, studyRoomPage);
+    }
+});
+
+document.getElementById('login-btn').onclick = () => { signInWithPopup(auth, provider).catch(err => console.error(err)); };
+document.getElementById('logout-btn').onclick = () => { signOut(auth).catch(err => console.error(err)); };
+
+async function loadUserMaterials(uid) {
+    try {
+        const res = await fetch(`http://localhost:3000/api/books/${uid}`);
+        const books = await res.json();
+        const shelf = document.getElementById('bookshelf');
+        shelf.innerHTML = "";
+        
+        books.forEach(data => {
+            const wrap = document.createElement('div');
+            wrap.className = 'book-wrapper';
+            
+            const book = document.createElement('div');
+            book.className = 'book-item';
+            book.style.backgroundColor = `hsl(${Math.random() * 360}, 60%, 35%)`;
+            book.innerHTML = data.title.substring(0,10) + "...";
+            
+            book.onclick = () => {
+                document.getElementById('viewer-placeholder').style.display = "none";
+                const v = document.getElementById('modal-viewer');
+                v.style.display = "block";
+                v.src = data.url;
+            };
+
+            const del = document.createElement('button');
+            del.className = 'delete-book-btn'; del.innerHTML = "×";
+            del.onclick = (e) => { 
+                e.stopPropagation(); 
+                if(confirm("Delete this material?")) deleteBook(data._id, uid); 
+            };
+
+            wrap.append(book, del); shelf.append(wrap);
+        });
+    } catch (e) { console.error(e); }
+}
+
+async function deleteBook(id, uid) {
+    const res = await fetch(`http://localhost:3000/api/books/${id}`, { method: 'DELETE' });
+    if (res.ok) loadUserMaterials(uid);
+}
+
+document.getElementById('file-upload').onchange = async (e) => {
+    const user = auth.currentUser; 
+    if (!user) return alert("Please log in first.");
+    const file = e.target.files[0]; if (!file) return;
+
+    const label = document.querySelector('.btn-upload-header');
+    const original = label.innerHTML;
+    label.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading...`;
+
+    const fd = new FormData(); 
+    fd.append('file', file); fd.append('userId', user.uid);
+
+    try {
+        const res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: fd });
+        if (res.ok) {
+            loadUserMaterials(user.uid);
+        } else {
+            const data = await res.json().catch(() => ({}));
+            const reason = data.details || data.error || res.statusText;
+            alert(`Upload failed: ${reason}`);
+            console.error('Upload failed:', data);
+        }
+    } catch (err) {
+        console.error('Upload error:', err);
+        alert('Upload failed: could not reach the server. Make sure the backend is running.');
+    } finally { label.innerHTML = original; e.target.value = ""; }
+};
+
+document.getElementById('update-playlist-btn').onclick = () => {
+    let url = document.getElementById('playlist-url').value.trim();
+    if (url) {
+        if (!url.startsWith('http')) url = 'https://' + url;
+        if (url.includes('spotify.com') && !url.includes('/embed')) {
+            url = url.replace('spotify.com/', 'spotify.com/embed/');
+        }
+        document.getElementById('spotify-iframe').src = url;
+        localStorage.setItem('savedPlaylist', url);
+    }
+};
+
+window.onload = () => {
+    const saved = localStorage.getItem('savedPlaylist');
+    if (saved) document.getElementById('spotify-iframe').src = saved;
+    
+    selectedDateStringGlobal = makeDateString(today.getDate(), today.getMonth(), today.getFullYear());
+    let currentDayIndex = (today.getDay() + 6) % 7;
+    document.getElementById('selected-day-name').textContent = dayNamesShort[currentDayIndex];
+    document.getElementById('selected-date-string').textContent = selectedDateStringGlobal;
+    
+    updateDisplay(); initDropdowns(); renderCalendar();
+};
+
+if (menuStudyBtn) menuStudyBtn.addEventListener('click', (e) => { e.preventDefault(); switchView(menuStudyBtn, studyRoomPage); });
+if (menuScheduleBtn) menuScheduleBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchView(menuScheduleBtn, schedulePage); if (auth.currentUser) loadSchedules(auth.currentUser.uid);
+});
+if (menuNotesBtn) {
+    menuNotesBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) return alert('Please log in to access notes.');
+        switchView(menuNotesBtn, notesPageArea); loadNotes(user.uid);
+    });
+}
+
+if (btnSaveNote) {
+    btnSaveNote.addEventListener('click', async () => {
+        const user = auth.currentUser;
+        if (!user) return alert('Session expired.');
+
+        const id = noteIdInput.value;
+        const title = noteTitleInput.value.trim();
+        const content = noteContentInput.value.trim();
+
+        if (!title || !content) return alert('Fields cannot be empty.');
+
+        const url = id ? `${NOTE_API_URL}/${id}` : NOTE_API_URL;
+        const method = id ? 'PUT' : 'POST';
+        const requestData = id ? { title, content } : { userId: user.uid, title, content };
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+            if (response.ok) {
+                noteIdInput.value = ''; noteTitleInput.value = ''; noteContentInput.value = '';
+                btnSaveNote.textContent = 'Save Note'; loadNotes(user.uid); 
+            }
+        } catch (error) { console.error(error); }
+    });
+}
+
+async function loadNotes(uid) {
+    if (!uid) return;
+    try {
+        const response = await fetch(`${NOTE_API_URL}/${uid}`);
+        const notes = await response.json();
+        notesListContainer.innerHTML = ''; 
+        notes.forEach(note => renderNoteCard(note));
+    } catch (error) { console.error(error); }
+}
+
+function renderNoteCard(note) {
+    const card = document.createElement('div');
+    card.className = 'note-card-item';
+    card.innerHTML = `
+        <div class="note-actions">
+            <button class="edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
+            <button class="delete-btn" title="Delete"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <h4 style="padding-right: 60px;">${note.title}</h4>
+        <p>${note.content}</p>
+    `;
+
+    card.querySelector('.edit-btn').onclick = () => {
+        noteIdInput.value = note._id; noteTitleInput.value = note.title;
+        noteContentInput.value = note.content; btnSaveNote.textContent = 'Update Note'; noteTitleInput.focus();
+    };
+
+    card.querySelector('.delete-btn').onclick = async () => {
+        if (confirm('Delete this note?')) {
+            const res = await fetch(`${NOTE_API_URL}/${note._id}`, { method: 'DELETE' });
+            if (res.ok) loadNotes(auth.currentUser.uid);
+        }
+    };
+    notesListContainer.append(card);
+}

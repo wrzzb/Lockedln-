@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LockedIn - Study Room</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="user-brand">
+                    <div class="avatar-circle"></div>
+                    <div id="user-profile" style="display: none;">
+                        <span id="user-name"></span>
+                    </div>
+                    <button id="login-btn" class="btn-login-container">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </div>
+                <nav class="side-nav">
+                    <a href="#" class="active" id="menu-study"><i class="fas fa-book-open"></i> Study Room</a>
+                    <a href="#" id="menu-schedule"><i class="fas fa-calendar-alt"></i> Schedule</a>
+                    <a href="#" id="menu-notes"><i class="fas fa-sticky-note"></i> Notes</a>
+                    <label for="bg-upload" class="side-link"><i class="fas fa-image"></i> Background</label>
+                    <input type="file" id="bg-upload" hidden>
+                </nav>
+            </div>
+            
+            <div class="sidebar-bottom">
+                <button id="logout-btn" class="btn-logout" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="study-center" id="study-room-page">
+            <header class="study-header">
+                <div class="subject-info">
+                    <h2>Study Room</h2>
+                </div>
+                <div class="header-actions">
+                    <label for="file-upload" class="btn-upload-header">
+                        <i class="fas fa-plus"></i> Add Material
+                    </label>
+                    <input type="file" id="file-upload" accept=".pdf,image/*" hidden>
+                    <button class="btn-session" id="start-session-btn">Start Session</button>
+                </div>
+            </header>
+
+            <div class="main-viewer-panel">
+                <div id="viewer-placeholder" class="upload-placeholder">
+                    <i class="fas fa-file-alt" style="font-size: 4rem; color: #555; margin-bottom: 20px;"></i>
+                    <p>Select a material from the shelf to view</p>
+                </div>
+                <iframe id="modal-viewer" src="" style="display:none;"></iframe>
+            </div>
+        </main>
+
+        <main class="schedule-center hidden-page" id="schedule-page">
+            <header class="schedule-header">
+                <div class="calendar-title-row">
+                    <i class="far fa-calendar-alt calendar-icon"></i>
+                    <div class="custom-select-wrapper">
+                        <select id="calendar-year-select" class="calendar-dropdown"></select>
+                    </div>
+                </div>
+                <div class="month-selector-wrapper">
+                    <div class="custom-select-wrapper">
+                        <select id="calendar-month-select" class="calendar-dropdown"></select>
+                    </div>
+                </div>
+            </header>
+
+            <div class="calendar-grid-container">
+                <div class="weekday-labels">
+                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span class="sun-label">Sun</span>
+                </div>
+                <div class="days-grid" id="calendar-days-grid"></div>
+            </div>
+
+            <div class="schedule-details-section">
+                <div class="details-date-banner">
+                    <span id="selected-day-name">Mon</span>
+                    <span id="selected-date-string">1/01/26</span>
+                </div>
+
+                <div class="tasks-list-scrollable" id="tasks-container"></div>
+                
+                <div class="add-schedule-trigger-card" id="trigger-add-schedule">
+                    <span>Add new schedule</span>
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+            </div>
+        </main>
+
+        <div id="notes-page" class="hidden-page">
+            <div class="notes-wrapper">
+                <div class="notes-input-box">
+                    <h3 style="color: #fff; margin: 0 0 5px 0; font-size: 1.4rem; font-weight: 600;">Personal Notes</h3>
+                    <input type="hidden" id="note-id" value="">
+                    <input type="text" id="note-title" placeholder="Note title..." />
+                    <textarea id="note-content" placeholder="Write something here..." rows="10"></textarea>
+                    <button id="btn-save-note">Save Note</button>
+                </div>
+                <div id="notes-list-container"></div>
+            </div>
+        </div>
+
+        <aside class="right-panel">
+            <section class="glass-panel timer-box">
+                <div class="panel-label">Timer</div>
+                <div class="timer-row">
+                    <h1 id="time-display">25:00</h1>
+                    <div class="timer-tools">
+                        <input type="number" id="custom-minutes" placeholder="Min">
+                        <i class="fas fa-check-circle" id="set-custom-btn" title="Set Time"></i>
+                        <i class="fas fa-play-circle" id="start-btn" title="Start"></i>
+                        <i class="fas fa-pause-circle" id="pause-btn" title="Pause"></i>
+                        <i class="fas fa-redo-alt" id="reset-btn" title="Reset"></i>
+                    </div>
+                </div>
+                <audio id="alarm-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" loop></audio>
+            </section>
+
+            <section class="glass-panel bookshelf-box">
+                <div class="panel-label">Material Shelf</div>
+                <div class="bookshelf-grid" id="bookshelf"></div>
+            </section>
+
+            <section class="glass-panel music-box">
+                <div class="panel-label">Music Player</div>
+                <div class="spotify-container">
+                    <iframe id="spotify-iframe" src="" width="100%" height="152" frameBorder="0" allow="autoplay; encrypted-media"></iframe>
+                </div>
+                <div class="playlist-config-mini">
+                    <input type="text" id="playlist-url" placeholder="Paste Spotify link...">
+                    <button id="update-playlist-btn" class="btn-primary-xs">Update</button>
+                </div>
+                <audio id="bg-audio"></audio>
+            </section>
+        </aside>
+
+    </div> 
+    
+    <div id="schedule-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-schedule-title"><i class="fas fa-calendar-plus"></i> New Schedule</h3>
+                <button id="close-modal-btn" class="modal-close-x">×</button>
+            </div>
+            <form id="schedule-form" class="modal-form">
+                <input type="hidden" id="modal-task-id" value="">
+                
+                <div class="form-group">
+                    <label for="modal-task-title">Schedule Title</label>
+                    <input type="text" id="modal-task-title" placeholder="e.g., Study Molecular Biology" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modal-task-time">Time</label>
+                        <input type="text" id="modal-task-time" placeholder="e.g., 08.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modal-task-tag">Tag</label>
+                        <input type="text" id="modal-task-tag" placeholder="e.g., 1-week" value="1-week">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="modal-task-deadline">Deadline Date (D/MM/YY)</label>
+                    <input type="text" id="modal-task-deadline" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="btn-delete-schedule" class="btn-logout" style="display: none; padding: 10px 15px; font-size: 0.85rem; width: auto; margin-right: auto;">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                    <button type="button" id="btn-cancel-schedule" class="btn-secondary">Cancel</button>
+                    <button type="submit" id="btn-submit-schedule" class="btn-primary">Add Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="focus-session-banner" class="focus-banner">
+        <span class="focus-banner-status" id="focus-banner-status"><i class="fas fa-lock"></i> Focus Session Active</span>
+        <span class="focus-banner-timer" id="focus-time-display">25:00</span>
+        <span class="focus-banner-distractions" id="focus-distraction-badge">
+            <i class="fas fa-eye-slash"></i> Distractions: <span id="focus-distraction-count">0</span>
+        </span>
+        <button id="end-session-btn" class="btn-secondary btn-end-session"><i class="fas fa-sign-out-alt"></i> End Session</button>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
