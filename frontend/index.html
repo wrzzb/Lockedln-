@@ -13,7 +13,12 @@
         <aside class="sidebar">
             <div class="sidebar-top">
                 <div class="user-brand">
-                    <div class="avatar-circle"></div>
+                    <img id="user-avatar" 
+                    src="https://ui-avatars.com/api/?name=User" 
+                    alt="Profile" 
+                    referrerpolicy="no-referrer" 
+                    style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #ccc; margin-right: 10px;">
+                    
                     <div id="user-profile" style="display: none;">
                         <span id="user-name"></span>
                     </div>
@@ -26,7 +31,10 @@
                     <a href="#" id="menu-schedule"><i class="fas fa-calendar-alt"></i> Schedule</a>
                     <a href="#" id="menu-notes"><i class="fas fa-sticky-note"></i> Notes</a>
                     <label for="bg-upload" class="side-link"><i class="fas fa-image"></i> Background</label>
-                    <input type="file" id="bg-upload" hidden>
+                    <input type="file" id="bg-upload" accept="image/*" hidden>
+                    <button id="reset-bg-btn" class="side-link" style="border:none; background:none; cursor:pointer;">
+                        <i class="fas fa-undo"></i> Reset Background
+                    </button>
                 </nav>
             </div>
             
