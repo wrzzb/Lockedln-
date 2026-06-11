@@ -355,12 +355,16 @@ onAuthStateChanged(auth, (user) => {
     const loginBtn = document.getElementById('login-btn');
     const userProfile = document.getElementById('user-profile');
     const logoutBtn = document.getElementById('logout-btn');
+    const avatar = document.getElementById('user-avatar');
 
     if (user) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (userProfile) userProfile.style.display = 'block';
         if (logoutBtn) logoutBtn.style.display = 'flex';
         document.getElementById('user-name').textContent = user?.displayName || "User";
+        if (avatar && user.photoURL) {
+            avatar.src = user.photoURL;
+        }
         loadUserMaterials(user.uid);
         loadSchedules(user.uid);
         switchView(menuStudyBtn, studyRoomPage);
@@ -368,6 +372,7 @@ onAuthStateChanged(auth, (user) => {
         if (loginBtn) loginBtn.style.display = 'block';
         if (userProfile) userProfile.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'none';
+        if (avatar) avatar.src = "default-avatar.png";
         document.getElementById('bookshelf').innerHTML = "";
         switchView(menuStudyBtn, studyRoomPage);
     }
@@ -532,3 +537,42 @@ function renderNoteCard(note) {
     };
     notesListContainer.append(card);
 }
+
+const bgUpload = document.getElementById('bg-upload');
+const resetBgBtn = document.getElementById('reset-bg-btn');
+
+// Fungsi untuk menerapkan background
+function applyBackground(imageUrl) {
+    document.body.style.backgroundImage = `url('${imageUrl}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundAttachment = 'fixed';
+}
+
+// 1. Upload Gambar Background
+bgUpload.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const imageUrl = event.target.result;
+        applyBackground(imageUrl);
+        // Simpan ke localStorage agar awet setelah refresh
+        localStorage.setItem('userBackground', imageUrl);
+    };
+    reader.readAsDataURL(file);
+};
+
+// 2. Reset ke Default
+resetBgBtn.onclick = () => {
+    document.body.style.backgroundImage = ''; // Menghapus style inline
+    localStorage.removeItem('userBackground');
+    alert("Background dikembalikan ke default.");
+};
+
+// 3. Load background saat halaman pertama kali dibuka
+window.addEventListener('load', () => {
+    const savedBg = localStorage.getItem('userBackground');
+    if (savedBg) applyBackground(savedBg);
+});
